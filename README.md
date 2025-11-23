@@ -14,10 +14,12 @@ A modern web-based application built with React and Vite that helps students, fa
 ## 🛠️ Technology Stack
 
 - **React** - UI library
+- **Leaflet*- JS library for interactive maps
 - **Vite** - Build tool and dev server (Fast Refresh with HMR)
 - **React Router** - Client-side routing
 - **CSS3** - Styling with gradients and animations
 - **JavaScript (ES6+)** - Modern JavaScript features
+- 
 
 ## 📦 Project Structure
 
