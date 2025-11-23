@@ -188,7 +188,7 @@ export const room_locations = [
     type: "classroom",
     building: "Tuwaiq Building",
     floor: "1st Floor",
-    roomNumber: "T120",
+    roomNumber: "F220",
     nearestLandmark: "Printing Station",
     directions:
       "From Printing Station, turn right and walk down the hall, room T120 on your left.",
@@ -198,7 +198,7 @@ export const room_locations = [
     type: "classroom",
     building: "Tuwaiq Building",
     floor: "2nd Floor",
-    roomNumber: "T230",
+    roomNumber: "G206",
     nearestLandmark: "Elevator G",
     directions:
       "Take Elevator G to 2nd floor, turn right, room T230 is at the end of the hallway.",
@@ -206,9 +206,9 @@ export const room_locations = [
   {
     id: 12,
     type: "classroom",
-    building: "Library & Gym",
+    building: "Najd",
     floor: "1st Floor",
-    roomNumber: "LG102",
+    roomNumber: "D206",
     nearestLandmark: "Library Study Zone",
     directions:
       "From Library Study Zone, go straight then left; room LG102 is beside the archives.",
@@ -216,9 +216,9 @@ export const room_locations = [
   {
     id: 13,
     type: "classroom",
-    building: "Tech Building",
+    building: "Najd",
     floor: "2nd Floor",
-    roomNumber: "TB205",
+    roomNumber: "D205",
     nearestLandmark: "Robotics Display",
     directions:
       "Walk past the Robotics Display, take stairs to 2nd floor, TB205 is on the right.",
@@ -226,9 +226,9 @@ export const room_locations = [
   {
     id: 14,
     type: "classroom",
-    building: "Tech Building",
+    building: "Tuwaiq",
     floor: "3rd Floor",
-    roomNumber: "TB311",
+    roomNumber: "E106",
     nearestLandmark: "Project Lab Entrance",
     directions:
       "Take Elevator C to the 3rd floor, go left, TB311 is next to the Project Lab.",
@@ -238,7 +238,7 @@ export const room_locations = [
     type: "classroom",
     building: "Arts Building",
     floor: "Ground Floor",
-    roomNumber: "A012",
+    roomNumber: "G102",
     nearestLandmark: "Art Gallery Foyer",
     directions:
       "From the Art Gallery Foyer, walk straight, A012 is the first room on the left.",
@@ -252,7 +252,7 @@ export const room_locations = [
     type: "lab",
     building: "Tech Building",
     floor: "1st Floor",
-    roomNumber: "L102",
+    roomNumber: "H102",
     nearestLandmark: "IT Department",
     directions:
       "Turn right after the IT Department desk, lab L102 is the last door on the left.",

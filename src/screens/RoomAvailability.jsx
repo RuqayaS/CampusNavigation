@@ -16,6 +16,10 @@ export default function RoomAvailability() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
 
+  // NEW: For mobile swipe schedule
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const touchStartX = useRef(0);
+
   // Refs for GSAP animations
   const pageTitleRef = useRef(null);
   const pageSubtitleRef = useRef(null);
@@ -28,7 +32,6 @@ export default function RoomAvailability() {
     if (selectedRoom) {
       document.body.style.overflow = "hidden";
 
-      // Animate modal entrance
       gsap.fromTo(
         ".modal-overlay",
         { opacity: 0 },
@@ -40,11 +43,13 @@ export default function RoomAvailability() {
         { scale: 0.8, opacity: 0, y: 50 },
         { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" }
       );
+
+      // Reset to first slide on open
+      setCurrentDayIndex(0);
     } else {
       document.body.style.overflow = "unset";
     }
 
-    // Cleanup on unmount
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -64,7 +69,6 @@ export default function RoomAvailability() {
 
   // GSAP Animations
   useEffect(() => {
-    // Page header animations
     gsap.fromTo(
       pageTitleRef.current,
       { opacity: 0, y: -50, scale: 0.9 },
@@ -77,7 +81,6 @@ export default function RoomAvailability() {
       { opacity: 1, y: 0, duration: 0.8, delay: 0.3, ease: "power2.out" }
     );
 
-    // Stats cards stagger animation
     gsap.fromTo(
       statsRef.current,
       { opacity: 0, y: 50, scale: 0.8 },
@@ -92,36 +95,34 @@ export default function RoomAvailability() {
       }
     );
 
-    // Filters fade in
     gsap.fromTo(
       filtersRef.current,
       { opacity: 0, x: -50 },
       { opacity: 1, x: 0, duration: 0.8, delay: 0.8, ease: "power2.out" }
     );
 
-    // Cleanup
     return () => {
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, []);
 
-  // Get current time and day
+  // Current date/time
   const now = new Date();
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
-  const currentDay = now.getDay(); // 0=Sunday, 1=Monday, etc.
+  const currentDay = now.getDay();
 
   const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday"];
   const dayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 
-  // Function to check if room is currently free
+  // Room Checks
   const isRoomFreeNow = (room) => {
     const todayKey = dayNames[currentDay];
     if (!room[todayKey] || currentDay > 4) return false;
 
     const currentTimeMinutes = currentHour * 60 + currentMinute;
 
-    const currentSlot = room[todayKey].find((slot) => {
+    const slot = room[todayKey].find((slot) => {
       const startTime = slot.timeStart.hour * 60 + slot.timeStart.minute;
       const endTime = slot.timeEnd.hour * 60 + slot.timeEnd.minute;
       return (
@@ -131,85 +132,71 @@ export default function RoomAvailability() {
       );
     });
 
-    return currentSlot !== undefined;
+    return slot !== undefined;
   };
 
-  // Function to get next available time for a room
   const getNextAvailableTime = (room) => {
     const todayKey = dayNames[currentDay];
     if (!room[todayKey] || currentDay > 4) return null;
 
-    const currentTimeMinutes = currentHour * 60 + currentMinute;
+    const nowMin = currentHour * 60 + currentMinute;
 
-    const nextFreeSlot = room[todayKey].find((slot) => {
+    const next = room[todayKey].find((slot) => {
       const startTime = slot.timeStart.hour * 60 + slot.timeStart.minute;
-      return startTime > currentTimeMinutes && slot.courseName === "Free";
+      return startTime > nowMin && slot.courseName === "Free";
     });
 
-    if (nextFreeSlot) {
-      return `${nextFreeSlot.timeStart.hour}:${String(
-        nextFreeSlot.timeStart.minute
-      ).padStart(2, "0")} - ${nextFreeSlot.timeEnd.hour}:${String(
-        nextFreeSlot.timeEnd.minute
-      ).padStart(2, "0")}`;
-    }
+    if (!next) return null;
 
-    return null;
+    return `${next.timeStart.hour}:${String(next.timeStart.minute).padStart(
+      2,
+      "0"
+    )} - ${next.timeEnd.hour}:${String(next.timeEnd.minute).padStart(2, "0")}`;
   };
 
-  // Function to check if room is free at specific time
   const isRoomFreeAtTime = (room, day, hour, minute) => {
     const dayKey = dayNames[day];
     if (!room[dayKey]) return false;
 
-    const searchTimeMinutes = hour * 60 + minute;
+    const t = hour * 60 + minute;
 
     const slot = room[dayKey].find((slot) => {
-      const startTime = slot.timeStart.hour * 60 + slot.timeStart.minute;
-      const endTime = slot.timeEnd.hour * 60 + slot.timeEnd.minute;
-      return (
-        searchTimeMinutes >= startTime &&
-        searchTimeMinutes < endTime &&
-        slot.courseName === "Free"
-      );
+      const start = slot.timeStart.hour * 60 + slot.timeStart.minute;
+      const end = slot.timeEnd.hour * 60 + slot.timeEnd.minute;
+
+      return t >= start && t < end && slot.courseName === "Free";
     });
 
     return slot !== undefined;
   };
 
-  // Filter rooms based on search criteria
+  // Filtering Rooms
   const filteredRooms = useMemo(() => {
     let filtered = Object.values(rooms);
 
-    // Filter by building
     if (selectedBuilding !== "ALL") {
       filtered = filtered.filter((room) =>
         room.name.startsWith(selectedBuilding)
       );
     }
 
-    // Filter by time and day
     if (searchTime && searchDay) {
-      const [hour, minute] = searchTime.split(":").map(Number);
-      const dayIndex = parseInt(searchDay);
-      filtered = filtered.filter((room) =>
-        isRoomFreeAtTime(room, dayIndex, hour, minute)
-      );
+      const [h, m] = searchTime.split(":").map(Number);
+      const d = parseInt(searchDay);
+      filtered = filtered.filter((room) => isRoomFreeAtTime(room, d, h, m));
     }
 
-    // Filter by currently available only
     if (showAvailableOnly) {
       filtered = filtered.filter((room) => isRoomFreeNow(room));
     }
 
-    return filtered.slice(0, 20); // Limit to 20 rooms for performance
-  }, [selectedBuilding, searchTime, searchDay, showAvailableOnly]);
+    return filtered.slice(0, 20);
+  }, [selectedBuilding, searchDay, searchTime, showAvailableOnly]);
 
-  // Animate room cards when filteredRooms changes
+  // Card animations
   useEffect(() => {
-    const cards = roomCardsRef.current.filter(Boolean); // remove null/undefined
-
-    if (cards.length === 0) return; // nothing to animate
+    const cards = roomCardsRef.current.filter(Boolean);
+    if (cards.length === 0) return;
 
     gsap.fromTo(
       cards,
@@ -225,10 +212,27 @@ export default function RoomAvailability() {
     );
   }, [filteredRooms]);
 
-  // Get available now count
   const availableNowCount = Object.values(rooms).filter((room) =>
     isRoomFreeNow(room)
   ).length;
+
+  // NEW: Swipe gesture handlers
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    const diff = e.changedTouches[0].clientX - touchStartX.current;
+
+    if (diff > 50 && currentDayIndex > 0) {
+      setCurrentDayIndex(currentDayIndex - 1);
+    } else if (
+      diff < -50 &&
+      currentDayIndex < getDays(selectedRoom).length - 1
+    ) {
+      setCurrentDayIndex(currentDayIndex + 1);
+    }
+  };
 
   return (
     <div className="room-availability-page">
@@ -256,6 +260,7 @@ export default function RoomAvailability() {
               <p>Available Now</p>
             </div>
           </div>
+
           <div
             className="stat-card total-stat"
             ref={(el) => (statsRef.current[1] = el)}
@@ -266,6 +271,7 @@ export default function RoomAvailability() {
               <p>Total Rooms</p>
             </div>
           </div>
+
           <div
             className="stat-card results-stat"
             ref={(el) => (statsRef.current[2] = el)}
@@ -278,7 +284,7 @@ export default function RoomAvailability() {
           </div>
         </div>
 
-        {/* Search Filters */}
+        {/* Filters */}
         <div className="search-filters-modern" ref={filtersRef}>
           {/* Building Filter */}
           <div className="filter-section">
@@ -292,6 +298,7 @@ export default function RoomAvailability() {
               >
                 All Buildings
               </button>
+
               {corners.map((corner) => (
                 <button
                   key={corner.name}
@@ -322,17 +329,19 @@ export default function RoomAvailability() {
                   </option>
                 ))}
               </select>
+
               <input
                 className="modern-time-input"
                 type="time"
                 value={searchTime}
                 onChange={(e) => setSearchTime(e.target.value)}
               />
+
               <button
                 className="clear-btn-modern"
                 onClick={() => {
-                  setSearchTime("");
                   setSearchDay("");
+                  setSearchTime("");
                 }}
               >
                 ✕ Clear
@@ -354,29 +363,29 @@ export default function RoomAvailability() {
           </div>
         </div>
 
-        {/* Room Grid */}
+        {/* Rooms Grid */}
         <div className="rooms-grid-modern">
           {filteredRooms.map((room, index) => {
-            // Check if we're searching for a specific time
             let isFree, displayText;
 
-            if (searchTime && searchDay) {
-              // Show availability for the searched time
-              const [hour, minute] = searchTime.split(":").map(Number);
-              const dayIndex = parseInt(searchDay);
-              isFree = isRoomFreeAtTime(room, dayIndex, hour, minute);
-              const dayName = dayLabels[dayIndex];
+            if (searchDay && searchTime) {
+              const [h, m] = searchTime.split(":").map(Number);
+              const di = parseInt(searchDay);
+              const dayName = dayLabels[di];
+
+              isFree = isRoomFreeAtTime(room, di, h, m);
+
               displayText = isFree
                 ? `Available on ${dayName} at ${searchTime}`
                 : `Occupied on ${dayName} at ${searchTime}`;
             } else {
-              // Show current availability
               isFree = isRoomFreeNow(room);
-              const nextAvailable = getNextAvailableTime(room);
+              const next = getNextAvailableTime(room);
+
               displayText = isFree
                 ? "Available right now!"
-                : nextAvailable
-                ? `Next available: ${nextAvailable}`
+                : next
+                ? `Next available: ${next}`
                 : "No more slots today";
             }
 
@@ -406,6 +415,7 @@ export default function RoomAvailability() {
                     {isFree ? "Available" : "Occupied"}
                   </span>
                 </div>
+
                 <div className="room-card-body">
                   <p
                     className={`status-message ${
@@ -416,6 +426,7 @@ export default function RoomAvailability() {
                     {displayText}
                   </p>
                 </div>
+
                 <div className="room-card-footer">
                   <button className="view-schedule-btn-modern">
                     <span>View Schedule</span>
@@ -436,7 +447,7 @@ export default function RoomAvailability() {
         )}
       </div>
 
-      {/* Room Schedule Modal */}
+      {/* ROOM SCHEDULE MODAL */}
       {selectedRoom && (
         <div
           className="modal-overlay"
@@ -450,41 +461,67 @@ export default function RoomAvailability() {
               className="close-modal"
               onClick={() => setSelectedRoom(null)}
               aria-label="Close schedule modal"
-              title="Press ESC to close"
             >
               ×
             </button>
-            <h2 id="modal-title">{selectedRoom.name} - Weekly Schedule</h2>
-            <div className="schedule-grid">
-              {getDays(selectedRoom).map(({ day, timeSlots }) => (
-                <div key={day} className="day-schedule">
-                  <h3>{day}</h3>
-                  {timeSlots && timeSlots.length > 0 ? (
-                    <div className="time-slots">
-                      {timeSlots.map((slot, i) => (
-                        <div
-                          key={i}
-                          className={`time-slot ${
-                            slot.courseName === "Free"
-                              ? "free-slot"
-                              : "busy-slot"
-                          }`}
-                        >
-                          <span className="time">
-                            {slot.timeStart.hour}:
-                            {String(slot.timeStart.minute).padStart(2, "0")} -{" "}
-                            {slot.timeEnd.hour}:
-                            {String(slot.timeEnd.minute).padStart(2, "0")}
-                          </span>
-                          <span className="course">{slot.courseName}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="no-schedule">No schedule</p>
-                  )}
-                </div>
-              ))}
+
+            <h2 id="modal-title">{selectedRoom.name} – Weekly Schedule</h2>
+
+            {/* --- MOBILE SWIPE CAROUSEL + DESKTOP GRID --- */}
+
+            <div className="schedule-container">
+              {/* Pagination Dots */}
+              <div className="pagination-dots">
+                {getDays(selectedRoom).map((_, i) => (
+                  <span
+                    key={i}
+                    className={`dot ${i === currentDayIndex ? "active" : ""}`}
+                    onClick={() => setCurrentDayIndex(i)}
+                  ></span>
+                ))}
+              </div>
+
+              {/* Swipeable carousel */}
+              <div
+                className="schedule-carousel"
+                style={{
+                  transform: `translateX(-${currentDayIndex * 100}%)`,
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
+                {getDays(selectedRoom).map(({ day, timeSlots }, i) => (
+                  <div key={i} className="day-slide">
+                    <h3>{day}</h3>
+
+                    {timeSlots && timeSlots.length > 0 ? (
+                      <div className="time-slots">
+                        {timeSlots.map((slot, idx) => (
+                          <div
+                            key={idx}
+                            className={`time-slot ${
+                              slot.courseName === "Free"
+                                ? "free-slot"
+                                : "busy-slot"
+                            }`}
+                          >
+                            <span className="time">
+                              {slot.timeStart.hour}:
+                              {String(slot.timeStart.minute).padStart(2, "0")} -{" "}
+                              {slot.timeEnd.hour}:
+                              {String(slot.timeEnd.minute).padStart(2, "0")}
+                            </span>
+
+                            <span className="course">{slot.courseName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="no-schedule">No schedule</p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -1853,6 +1853,73 @@ body {
   transform: translateX(5px);
 }
 
+/* ---- Mobile Carousel ---- */
+.schedule-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Pagination dots */
+.pagination-dots {
+  display: none;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pagination-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #bbb;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.pagination-dots .dot.active {
+  background: #333;
+}
+
+/* Carousel wrapper */
+.schedule-carousel {
+  display: flex;
+  transition: transform 0.35s ease-in-out;
+  width: 100%;
+}
+
+/* One full-width slide */
+.day-slide {
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 10px 0;
+}
+
+/* ---- Desktop Grid (unchanged) ---- */
+@media (min-width: 841px) {
+  .pagination-dots {
+    display: none;
+  }
+
+  .schedule-carousel {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    transform: none !important;
+  }
+
+  .day-slide {
+    min-width: unset;
+    margin: 0px 10px;
+  }
+}
+
+/* Show dots on mobile */
+@media (max-width: 840px) {
+  .pagination-dots {
+    display: flex;
+  }
+}
+
 /* Modern No Results */
 .no-results-modern {
   text-align: center;
