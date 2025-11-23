@@ -2,59 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import "../App.css";
 import Header from "../components/Header";
+import { room_locations } from "../data/data";
 
 export default function SearchRoom() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
+  const [searchClicked, setSearchClicked] = useState(false);
 
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
   const searchFormRef = useRef(null);
-
-  // Dummy instructor/room data
-  const instructorRooms = [
-    {
-      id: 1,
-      instructorName: "Dr. Ahmed Al-Mansoori",
-      building: "Tuwaiq Building",
-      floor: "2nd Floor",
-      roomNumber: "T211",
-      officeHours: "Sun-Wed: 10:00-12:00",
-      nearestLandmark: "Main Elevator",
-      accessType: "Key Card Required",
-    },
-    {
-      id: 2,
-      instructorName: "Dr. Fatima Al-Zahrani",
-      building: "Main Building",
-      floor: "3rd Floor",
-      roomNumber: "M305",
-      officeHours: "Mon-Thu: 09:00-11:00",
-      nearestLandmark: "Library Entrance",
-      accessType: "Open Access",
-    },
-    {
-      id: 3,
-      instructorName: "Prof. Mohammed Al-Qahtani",
-      building: "Najd Building",
-      floor: "1st Floor",
-      roomNumber: "N102",
-      officeHours: "Sun-Tue: 13:00-15:00",
-      nearestLandmark: "IT Department",
-      accessType: "Key Card Required",
-    },
-    {
-      id: 4,
-      instructorName: "Dr. Sarah Al-Mutairi",
-      building: "Library & Gym",
-      floor: "Ground Floor",
-      roomNumber: "LG08",
-      officeHours: "Mon-Wed: 11:00-13:00",
-      nearestLandmark: "Gym Reception",
-      accessType: "Open Access",
-    },
-  ];
 
   // GSAP Animations
   useEffect(() => {
@@ -77,6 +35,30 @@ export default function SearchRoom() {
     );
   }, []);
 
+  // Live search as you type (≥ 4 characters)
+  useEffect(() => {
+    const query = searchQuery.toLowerCase().trim();
+
+    if (query.length < 3) {
+      setSearchResults([]);
+      setSearchClicked(false);
+      return;
+    }
+
+    const results = room_locations.filter((room) => {
+      return (
+        (room.instructorName &&
+          room.instructorName.toLowerCase().includes(query)) ||
+        room.roomNumber.toLowerCase().includes(query) ||
+        room.building.toLowerCase().includes(query) ||
+        room.type.toLowerCase().includes(query) ||
+        room.nearestLandmark.toLowerCase().includes(query)
+      );
+    });
+
+    setSearchResults(results);
+  }, [searchQuery]);
+
   // Animate search results
   useEffect(() => {
     if (searchResults.length > 0) {
@@ -95,27 +77,29 @@ export default function SearchRoom() {
     }
   }, [searchResults]);
 
-  // Handle search
-  const handleSearch = (e) => {
+  // Search button click handler (works for any query length)
+  const handleSearchClick = (e) => {
     e.preventDefault();
-    if (searchQuery.trim() === "") {
-      setSearchResults([]);
-      return;
-    }
+    setSearchClicked(true);
 
-    const results = instructorRooms.filter(
-      (room) =>
-        room.instructorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        room.roomNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        room.building.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const query = searchQuery.toLowerCase().trim();
+
+    const results = room_locations.filter((room) => {
+      return (
+        (room.instructorName &&
+          room.instructorName.toLowerCase().includes(query)) ||
+        room.roomNumber.toLowerCase().includes(query) ||
+        room.building.toLowerCase().includes(query) ||
+        room.type.toLowerCase().includes(query) ||
+        room.nearestLandmark.toLowerCase().includes(query)
+      );
+    });
 
     setSearchResults(results);
   };
 
   return (
     <div className="search-room-page">
-      {/* Header */}
       <Header />
 
       {/* Search Section */}
@@ -123,17 +107,18 @@ export default function SearchRoom() {
         <div className="search-hero">
           <h1 ref={titleRef}>Finding a Room?</h1>
           <p ref={subtitleRef}>
-            Search for instructor offices by name, room number, or building
+            Search for classrooms or instructor offices by name, room number, or
+            building
           </p>
 
           <form
-            onSubmit={handleSearch}
             className="search-form"
             ref={searchFormRef}
+            onSubmit={handleSearchClick}
           >
             <input
               type="text"
-              placeholder="Search for instructor or room..."
+              placeholder="Search for instructor, room number, or building..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
@@ -156,7 +141,14 @@ export default function SearchRoom() {
                 className="room-result-card"
                 onClick={() => setSelectedRoom(room)}
               >
-                <h3>{room.instructorName}</h3>
+                <h3>
+                  {room.type === "instructor"
+                    ? room.instructorName
+                    : `${
+                        room.type.charAt(0).toUpperCase() + room.type.slice(1)
+                      } ${room.roomNumber}`}
+                </h3>
+
                 <p>
                   <strong>Building:</strong> {room.building}
                 </p>
@@ -166,9 +158,29 @@ export default function SearchRoom() {
                 <p>
                   <strong>Floor:</strong> {room.floor}
                 </p>
+                <p>
+                  <strong>Landmark:</strong> {room.nearestLandmark}
+                </p>
+
+                {room.type === "instructor" && (
+                  <p>
+                    <strong>Office Hours:</strong> {room.officeHours}
+                  </p>
+                )}
+
+                <p>
+                  <strong>Directions:</strong> {room.directions}
+                </p>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* No results message */}
+      {searchClicked && searchResults.length === 0 && (
+        <div className="no-results">
+          <p>No rooms found matching "{searchQuery}"</p>
         </div>
       )}
 
@@ -181,7 +193,16 @@ export default function SearchRoom() {
           >
             ×
           </button>
-          <h2>{selectedRoom.instructorName}</h2>
+
+          <h2>
+            {selectedRoom.type === "instructor"
+              ? selectedRoom.instructorName
+              : `${
+                  selectedRoom.type.charAt(0).toUpperCase() +
+                  selectedRoom.type.slice(1)
+                } ${selectedRoom.roomNumber}`}
+          </h2>
+
           <div className="details">
             <p>
               <strong>Building:</strong> {selectedRoom.building}
@@ -192,14 +213,18 @@ export default function SearchRoom() {
             <p>
               <strong>Room Number:</strong> {selectedRoom.roomNumber}
             </p>
-            <p>
-              <strong>Office Hours:</strong> {selectedRoom.officeHours}
-            </p>
+
+            {selectedRoom.type === "instructor" && (
+              <p>
+                <strong>Office Hours:</strong> {selectedRoom.officeHours}
+              </p>
+            )}
+
             <p>
               <strong>Nearest Landmark:</strong> {selectedRoom.nearestLandmark}
             </p>
             <p>
-              <strong>Access:</strong> {selectedRoom.accessType}
+              <strong>Directions:</strong> {selectedRoom.directions}
             </p>
           </div>
         </div>
