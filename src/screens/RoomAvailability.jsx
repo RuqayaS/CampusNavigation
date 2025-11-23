@@ -207,20 +207,22 @@ export default function RoomAvailability() {
 
   // Animate room cards when filteredRooms changes
   useEffect(() => {
-    if (roomCardsRef.current.length > 0) {
-      gsap.fromTo(
-        roomCardsRef.current,
-        { opacity: 0, y: 30, scale: 0.95 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.5,
-          stagger: 0.08,
-          ease: "power2.out",
-        }
-      );
-    }
+    const cards = roomCardsRef.current.filter(Boolean); // remove null/undefined
+
+    if (cards.length === 0) return; // nothing to animate
+
+    gsap.fromTo(
+      cards,
+      { opacity: 0, y: 30, scale: 0.95 },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: "power2.out",
+      }
+    );
   }, [filteredRooms]);
 
   // Get available now count
