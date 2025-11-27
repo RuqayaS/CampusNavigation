@@ -180,30 +180,56 @@ body {
 
 .hero-section {
   position: relative;
-  height: 60vh;
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-    url("/hero-bg.jpg") center/cover;
+  min-height: 70vh;
+  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 2rem;
+  padding: 4rem 2rem;
 }
 
 .hero-content {
-  max-width: 800px;
+  max-width: 1400px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4rem;
 }
 
-.hero-content h1 {
+.hero-text {
+  flex: 1;
+  max-width: 600px;
+  text-align: left;
+}
+
+.hero-text h1 {
   font-size: 3.5rem;
   margin-bottom: 1.5rem;
   font-weight: 700;
+  color: #fff;
 }
 
-.hero-content p {
-  font-size: 1.2rem;
+.hero-text p {
+  font-size: 1.1rem;
   line-height: 1.8;
-  color: #ddd;
+  color: #ccc;
+}
+
+.hero-image {
+  flex: 0 0 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-image img {
+  width: 450px;
+  height: 450px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 5px solid #ff8c42;
+  box-shadow: 0 20px 60px rgba(255, 140, 66, 0.3);
 }
 
 /* ===== ACTION BUTTONS / NAVIGATION ===== */
@@ -307,39 +333,54 @@ body {
 
 .building-card {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
+  grid-template-columns: 1fr auto;
+  gap: 3rem;
   align-items: center;
-  padding: 4rem 5%;
-  min-height: 400px;
+  padding: 4rem 6%;
+  min-height: 450px;
   position: relative;
+  transition: transform 0.3s ease;
+}
+
+.building-card:hover {
+  transform: translateY(-5px);
 }
 
 .building-card > div {
-  padding: 2rem;
+  padding: 2rem 3rem;
   z-index: 1;
 }
 
 .building-card h3 {
-  font-size: 2.5rem;
+  font-size: 2.8rem;
   margin-bottom: 1.5rem;
   font-weight: 700;
   color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
 }
 
 .building-card p {
-  line-height: 1.8;
-  color: #fff;
-  font-size: 1.1rem;
+  line-height: 1.9;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.15rem;
   margin-bottom: 1rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .building-card img {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: 350px;
-  object-fit: cover;
-  border-radius: 0;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.building-card img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
 }
 
 /* Green - Main Building */
@@ -350,7 +391,7 @@ body {
 /* Red - Library & Gym - Image on LEFT, Text on RIGHT */
 .building-library {
   background: linear-gradient(135deg, #8b1a1a 0%, #b82e2e 50%, #8b1a1a 100%);
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto 1fr;
 }
 
 .building-library > div:first-child {
@@ -427,7 +468,9 @@ body {
 /* Search Room Page Background */
 .search-room-page .search-section {
   background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-    url("/unnamed.jpg") center/cover;
+    url("/E306.jpg");
+  background-position: left center;
+  background-size: cover;
 }
 
 /* Search Office Page Background */
@@ -437,8 +480,11 @@ body {
 }
 
 .search-hero {
-  text-align: center;
+  text-align: left;
   max-width: 700px;
+  margin-right: auto;
+  margin-left: 0;
+  padding-left: 4rem;
 }
 
 .search-hero h1 {
@@ -456,7 +502,7 @@ body {
   display: flex;
   gap: 1rem;
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .search-input {
@@ -1220,12 +1266,31 @@ body {
     padding: 1rem 1.5rem;
   }
 
-  .hero-content h1 {
+  .hero-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .hero-text {
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .hero-text h1 {
     font-size: 2.5rem;
   }
 
-  .hero-content p {
+  .hero-text p {
     font-size: 1rem;
+  }
+
+  .hero-image {
+    flex: 0 0 300px;
+  }
+
+  .hero-image img {
+    width: 300px;
+    height: 300px;
   }
 
   .action-buttons {
@@ -1851,6 +1916,73 @@ body {
 
 .view-schedule-btn-modern:hover .arrow {
   transform: translateX(5px);
+}
+
+/* ---- Mobile Carousel ---- */
+.schedule-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Pagination dots */
+.pagination-dots {
+  display: none;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pagination-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #bbb;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.pagination-dots .dot.active {
+  background: #333;
+}
+
+/* Carousel wrapper */
+.schedule-carousel {
+  display: flex;
+  transition: transform 0.35s ease-in-out;
+  width: 100%;
+}
+
+/* One full-width slide */
+.day-slide {
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 10px 0;
+}
+
+/* ---- Desktop Grid (unchanged) ---- */
+@media (min-width: 841px) {
+  .pagination-dots {
+    display: none;
+  }
+
+  .schedule-carousel {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    transform: none !important;
+  }
+
+  .day-slide {
+    min-width: unset;
+    margin: 0px 10px;
+  }
+}
+
+/* Show dots on mobile */
+@media (max-width: 840px) {
+  .pagination-dots {
+    display: flex;
+  }
 }
 
 /* Modern No Results */
